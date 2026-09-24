@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Product Created</title>
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #f4f4f7;
+        padding: 30px 15px;
+        margin: 0;
+        color: #333333;
+    }
+
+    .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .email-header {
+        background-color: #1f2937;
+        padding: 24px 30px;
+        text-align: center;
+    }
+
+    .email-header h1 {
+        color: #ffffff;
+        font-size: 22px;
+        margin: 0;
+        letter-spacing: 0.3px;
+    }
+
+    .email-body {
+        padding: 28px 30px 10px 30px;
+    }
+
+    .email-body p.intro {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #4b5563;
+        margin-top: 0;
+        margin-bottom: 22px;
+    }
+
+    .product-image-wrap {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+   .product-image-wrap img {
+        max-width: 200px;
+        width: 100%;
+        height: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 6px;
+        background-color: #fafafa;
+        display: block;
+        margin: 0 auto;
+    }
+
+    table.details-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    table.details-table tr {
+        border-bottom: 1px solid #eef0f3;
+    }
+
+    table.details-table tr:last-child {
+        border-bottom: none;
+    }
+
+    table.details-table td {
+        padding: 12px 8px;
+        font-size: 14px;
+        vertical-align: top;
+    }
+
+    table.details-table td.label {
+        color: #6b7280;
+        font-weight: 600;
+        width: 40%;
+        white-space: nowrap;
+    }
+
+    table.details-table td.value {
+        color: #111827;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .badge {
+        display: inline-block;
+        background-color: #ecfdf5;
+        color: #059669;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        letter-spacing: 0.3px;
+    }
+
+    .email-footer {
+        padding: 18px 30px 28px 30px;
+        text-align: center;
+    }
+
+    .email-footer p {
+        font-size: 12px;
+        color: #9ca3af;
+        margin: 0;
+    }
+</style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>New Product Created</h1>
+        </div>
+
+        <div class="email-body">
+            <p class="intro">
+                A new product has just been added to the inventory system. See the details below.
+            </p>
+
+            <div class="product-image-wrap">
+                <img src="<%= productImage %>" alt="Product Image">
+            </div>
+
+            <table class="details-table">
+                <tr>
+                    <td class="label">Name</td>
+                    <td class="value"><%= productName %></td>
+                </tr>
+                <tr>
+                    <td class="label">Description</td>
+                    <td class="value"><%= productDescription %></td>
+                </tr>
+                <tr>
+                    <td class="label">Price</td>
+                    <td class="value">&#8358;<%= productPrice %></td>
+                </tr>
+                <tr>
+                    <td class="label">Size</td>
+                    <td class="value"><%= productSize %></td>
+                </tr>
+                <tr>
+                    <td class="label">Stock</td>
+                    <td class="value"><%= productStock %></td>
+                </tr>
+                <tr>
+                    <td class="label">Quantity</td>
+                    <td class="value"><%= productQuantity %></td>
+                </tr>
+                <tr>
+                    <td class="label">Status</td>
+                    <td class="value"><span class="badge">In Stock</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="email-footer">
+            <p>This is an automated notification from your Inventory Management System.</p>
+        </div>
+    </div>
+</body>
+</html>
