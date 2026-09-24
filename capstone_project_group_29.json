@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "2c1b32ab-e832-4f4d-b53d-2fc19597ac61",
-    "name": "Supermarket Backend API",
+    "name": "Supermarket Backend API(Capstone project Group 29)",
     "description": "Capstone MVP backend for a supermarket platform.\n\nCovers: authentication & roles, categories, products (with Cloudinary image upload), cart, checkout (Paystack payment verification), and order management.\n\n## How to use this collection\n1. Set the `baseUrl` variable to your local (http://localhost:5000) or deployed API URL.\n2. Run 'Register (Customer)' or 'Login', which auto-saves the JWT into `customerToken`.\n3. Run 'Register (Admin)' or 'Login (Admin)' to auto-save `adminToken`.\n4. Admin-only requests use `{{adminToken}}`, customer requests use `{{customerToken}}`.\n\n## Response format\nAll endpoints return `{ success, message, data }`. Errors also follow this shape with `success: false`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "22110395"
