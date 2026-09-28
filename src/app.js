@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const rateLimit = require("express-rate-limit");
+const { globalLimiter, authLimiter } = require("./middleware/rateLimiter");
 
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
@@ -25,13 +25,8 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use("/api", limiter);
+app.use("/api", globalLimiter);
+app.use("/api/auth", authLimiter); // Protects login & registration against brute-force
 
 app.get("/", (req, res) => {
   res.status(200).json({ success: true, message: "Supermarket Backend API is running", data: null });
