@@ -21,6 +21,7 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (err.name === "CastError") {
+    console.log("CastError detected -> Path:", err.path, "| Value:", err.value);
     statusCode = 400;
     message = "Invalid ID format";
   }
