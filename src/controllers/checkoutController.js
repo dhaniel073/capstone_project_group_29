@@ -6,9 +6,12 @@ const AppError = require("../utils/AppError");
 const ApiResponse = require("../utils/apiResponse");
 const catchAsync = require("../utils/catchAsync");
 const { verifyTransaction } = require("../services/paystackService");
+const emailTemplate = require("../EmailTemplates/emailTemplate");
+const sendEmail = require("../utils/sendEmail");
+
 
 // POST /api/checkout
-// Called by the mobile app right after Paystack's onSuccess callback fires
+// Called by the webapp right after Paystack's onSuccess callback fires
 // with a transaction reference. This is the ONLY place an order gets created
 // and stock gets deducted for a paid order.
 //
@@ -33,19 +36,6 @@ exports.checkout = catchAsync(async (req, res, next) => {
     );
   }
 
-  /*
-    Your verifyTransaction helper already returns Paystack's INNER `data`:
-
-    {
-      status: "success",
-      amount: 150000,
-      reference: "your-reference",
-      currency: "NGN",
-      channel: "card",
-      gateway_response: "Successful",
-      paid_at: "2026-10-04T..."
-    }
-  */
   const paystackData = await verifyTransaction(reference);
 
   console.log(
@@ -145,16 +135,6 @@ exports.checkout = catchAsync(async (req, res, next) => {
   // This is the complete amount your customer should pay.
   const totalAmount = subtotal + deliveryFee;
 
-  /*
-    Paystack returns NGN transaction amount in KOBO.
-
-    Example for your screenshot:
-    subtotal: ₦1,000
-    deliveryFee: ₦500
-    totalAmount: ₦1,500
-    expectedKobo: 150000
-    Paystack amount: 150000
-  */
   const expectedKobo = Math.round(totalAmount * 100);
   const paidKobo = Number(paystackData.amount);
 
@@ -231,6 +211,32 @@ exports.checkout = catchAsync(async (req, res, next) => {
   // Empty the customer cart after the successful order.
   cart.items = [];
   await cart.save();
+
+  const orderEmail = emailTemplate({
+    name: req.user.name,
+    subject: `Order confirmed - ${order._id}`,
+    title: "Your order is confirmed",
+    message: `We have received your payment of ₦${totalAmount.toLocaleString(
+      "en-NG"
+    )}. Your order is now being processed and we will notify you when it is on its way.`,
+    buttonText: "View My Orders",
+    buttonUrl: `${process.env.FRONTEND_URL}/orders`,
+    notice: `Order reference: ${order._id}. Payment reference: ${reference}.`,
+  });
+
+  try {
+    await sendEmail({
+      to: req.user.email,
+      subject: orderEmail.subject,
+      text: orderEmail.text,
+      html: orderEmail.html,
+    });
+  } catch (error) {
+    /*
+      Never make a paid order fail because confirmation email failed.
+    */
+    console.error("Order confirmation email could not be sent:", error.message);
+  }
 
   return ApiResponse.success(res, {
     statusCode: 201,
