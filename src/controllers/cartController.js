@@ -40,3 +40,105 @@ exports.removeFromCart = catchAsync(async (req, res, next) => {
 
   return ApiResponse.success(res, { message: "Item removed from cart", data: cart });
 });
+
+exports.removeOneFromCart = catchAsync(async (req, res, next) => {
+  const { productId } = req.params;
+
+  if (!productId) {
+    return next(new AppError("Product ID is required", 400));
+  }
+
+  const cart = await Cart.findOne({
+    user: req.user._id,
+  });
+
+  if (!cart) {
+    return next(new AppError("Cart not found", 404));
+  }
+
+  const itemIndex = cart.items.findIndex(
+    (item) => String(item.product) === String(productId)
+  );
+
+  if (itemIndex === -1) {
+    return next(new AppError("This product is not in your cart", 404));
+  }
+
+  const cartItem = cart.items[itemIndex];
+
+  let message;
+
+  if (cartItem.quantity > 1) {
+    cartItem.quantity -= 1;
+    message = "Item quantity decreased by one";
+  } else {
+    cart.items.splice(itemIndex, 1);
+    message = "Item removed from cart";
+  }
+
+  await cart.save();
+
+  const updatedCart = await Cart.findById(cart._id).populate({
+    path: "items.product",
+    select: "name price imageUrl",
+  });
+
+  return ApiResponse.success(res, {
+    statusCode: 200,
+    message,
+    data: {
+      cart: updatedCart,
+    },
+  });
+});
+
+exports.addOneToCart = catchAsync(async (req, res, next) => {
+  const { productId } = req.params;
+
+  if (!productId) {
+    return next(new AppError("Product ID is required", 400));
+  }
+
+  const cart = await Cart.findOne({
+    user: req.user._id,
+  });
+
+  if (!cart) {
+    return next(new AppError("Cart not found", 404));
+  }
+
+  const itemIndex = cart.items.findIndex(
+    (item) => String(item.product) === String(productId)
+  );
+
+  if (itemIndex === -1) {
+    return next(new AppError("This product is not in your cart", 404));
+  }
+
+  const cartItem = cart.items[itemIndex];
+
+  let message;
+
+  if (cartItem.quantity > 1) {
+    cartItem.quantity += 1;
+    message = "Item quantity decreased by one";
+  } else {
+    cart.items.splice(itemIndex, 1);
+    message = "Item removed from cart";
+  }
+
+  await cart.save();
+
+  const updatedCart = await Cart.findById(cart._id).populate({
+    path: "items.product",
+    select: "name price imageUrl",
+  });
+
+  return ApiResponse.success(res, {
+    statusCode: 200,
+    message,
+    data: {
+      cart: updatedCart,
+    },
+  });
+});
