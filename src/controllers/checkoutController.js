@@ -9,6 +9,52 @@ const { verifyTransaction } = require("../services/paystackService");
 const emailTemplate = require("../EmailTemplates/emailTemplate");
 const sendEmail = require("../utils/sendEmail");
 
+const crypto = require("crypto");
+const DELIVERY_FEE = 500;
+
+exports.initializeCheckout = catchAsync(async (req, res, next) => {
+  const cart = await Cart.findOne({ user: req.user._id }).populate({
+    path: "items.product",
+    select: "name price",
+  });
+
+  if (!cart || cart.items.length === 0) {
+    return next(new AppError("Your cart is empty", 400));
+  }
+
+  const subtotal = cart.items.reduce(
+    (sum, i) => sum + i.product.price * i.quantity,
+    0
+  );
+  const total = subtotal + DELIVERY_FEE;
+  const reference = `SMKT-${crypto.randomUUID()}`;
+
+  const response = await fetch("https://api.paystack.co/transaction/initialize", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: req.user.email,
+      amount: Math.round(total * 100), // kobo
+      currency: "NGN",
+      reference,
+      metadata: { userId: String(req.user._id), cartId: String(cart._id) },
+    }),
+  });
+  const json = await response.json();
+
+  if (!response.ok || !json.status) {
+    return next(new AppError(json.message || "Unable to start payment", 502));
+  }
+
+  return ApiResponse.success(res, {
+    statusCode: 200,
+    message: "Payment initialized",
+    data: { access_code: json.data.access_code, reference: json.data.reference },
+  });
+});
 
 // POST /api/checkout
 // Called by the webapp right after Paystack's onSuccess callback fires

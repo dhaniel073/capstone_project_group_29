@@ -8,11 +8,55 @@ const {
   deleteImage,
 } = require("../services/cloudinaryService");
 
+const mongoose = require("mongoose");
+
 exports.getProducts = catchAsync(async (req, res) => {
   const { search, category, page = 1, limit = 10 } = req.query;
   const filter = { isActive: true };
   if (category) filter.category = category;
   if (search) filter.$text = { $search: search };
+
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+  const skip = (pageNum - 1) * limitNum;
+
+  const [products, total] = await Promise.all([
+    Product.find(filter)
+      .populate("category", "name slug")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum),
+    Product.countDocuments(filter),
+  ]);
+
+  return ApiResponse.success(res, {
+    message: "Products fetched successfully",
+    data: products,
+    meta: {
+      currentPage: pageNum,
+      pageSize: limitNum,
+      totalRecords: total,
+      totalPages: Math.ceil(total / limitNum),
+    },
+  });
+});
+
+exports.getProducts = catchAsync(async (req, res, next) => { // 1. add `next`
+  const { search, category, page = 1, limit = 10 } = req.query;
+  const filter = { isActive: true };
+
+  // 2. replaces: if (category) filter.category = category;
+  if (category) {
+    if (!mongoose.isValidObjectId(category)) {
+      return next(new AppError("Invalid category ID", 400));
+    }
+    filter.category = category;
+  }
+
+  // 3. replaces: if (search) filter.$text = { $search: search };
+  if (typeof search === "string" && search.trim()) {
+    filter.$text = { $search: search.trim() };
+  }
 
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
   const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
@@ -141,5 +185,41 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
   return ApiResponse.success(res, {
     message: "Product deleted successfully",
     data: null,
+  });
+});
+
+exports.getProductsByCategory = catchAsync(async (req, res, next) => {
+  const { categoryId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  if (!mongoose.isObjectIdOrHexString(categoryId)) {
+    return next(new AppError("Invalid category ID", 400));
+  }
+
+  const filter = { isActive: true, category: categoryId };
+
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+  const skip = (pageNum - 1) * limitNum;
+
+  const [products, total] = await Promise.all([
+    Product.find(filter)
+      .populate("category", "name slug")
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    Product.countDocuments(filter),
+  ]);
+
+  return ApiResponse.success(res, {
+    message: "Products fetched successfully",
+    data: products,
+    meta: {
+      currentPage: pageNum,
+      pageSize: limitNum,
+      totalRecords: total,
+      totalPages: Math.ceil(total / limitNum),
+    },
   });
 });

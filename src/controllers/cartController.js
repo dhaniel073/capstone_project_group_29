@@ -107,25 +107,15 @@ exports.addOneToCart = catchAsync(async (req, res, next) => {
     return next(new AppError("Cart not found", 404));
   }
 
-  const itemIndex = cart.items.findIndex(
+  const cartItem = cart.items.find(
     (item) => String(item.product) === String(productId)
   );
 
-  if (itemIndex === -1) {
+  if (!cartItem) {
     return next(new AppError("This product is not in your cart", 404));
   }
 
-  const cartItem = cart.items[itemIndex];
-
-  let message;
-
-  if (cartItem.quantity > 1) {
-    cartItem.quantity += 1;
-    message = "Item quantity decreased by one";
-  } else {
-    cart.items.splice(itemIndex, 1);
-    message = "Item removed from cart";
-  }
+  cartItem.quantity += 1;
 
   await cart.save();
 
@@ -136,7 +126,7 @@ exports.addOneToCart = catchAsync(async (req, res, next) => {
 
   return ApiResponse.success(res, {
     statusCode: 200,
-    message,
+    message: "Item quantity increased by one",
     data: {
       cart: updatedCart,
     },
