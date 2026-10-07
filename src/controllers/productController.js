@@ -41,44 +41,74 @@ exports.getProducts = catchAsync(async (req, res) => {
   });
 });
 
-exports.getProducts = catchAsync(async (req, res, next) => { // 1. add `next`
-  const { search, category, page = 1, limit = 10 } = req.query;
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+exports.getProducts = catchAsync(async (req, res, next) => {
+  const { search, category } = req.query;
+
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+  const skip = (page - 1) * limit;
+
   const filter = { isActive: true };
 
-  // 2. replaces: if (category) filter.category = category;
-  if (category) {
-    if (!mongoose.isValidObjectId(category)) {
+  if (search && search.trim()) {
+    filter.name = {
+      $regex: escapeRegex(search.trim()),
+      $options: "i",
+    };
+  }
+
+  if (category && category.trim()) {
+    if (!mongoose.isValidObjectId(category.trim())) {
       return next(new AppError("Invalid category ID", 400));
     }
-    filter.category = category;
+
+    filter.category = category.trim();
   }
 
-  // 3. replaces: if (search) filter.$text = { $search: search };
-  if (typeof search === "string" && search.trim()) {
-    filter.$text = { $search: search.trim() };
-  }
+ console.log("Product query diagnostics:", {
+  database: Product.db.name,
+  collection: Product.collection.name,
+  categorySchemaType: Product.schema.path("category")?.instance,
+  filter,
+});
 
-  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
-  const skip = (pageNum - 1) * limitNum;
+const diagnosticQuery = Product.find(filter).limit(1);
+const diagnosticProducts = await diagnosticQuery.exec();
+
+console.log(
+  "Filter after Mongoose casting:",
+  diagnosticQuery.getFilter()
+);
+
+console.log(
+  "First matching product:",
+  diagnosticProducts[0] || "NO MATCH"
+);
 
   const [products, total] = await Promise.all([
     Product.find(filter)
       .populate("category", "name slug")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNum),
+      .limit(limit),
     Product.countDocuments(filter),
   ]);
 
   return ApiResponse.success(res, {
-    message: "Products fetched successfully",
-    data: products,
-    meta: {
-      currentPage: pageNum,
-      pageSize: limitNum,
-      totalRecords: total,
-      totalPages: Math.ceil(total / limitNum),
+    statusCode: 200,
+    message: "Products retrieved successfully",
+    data: {
+      products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1,
+      },
     },
   });
 });
