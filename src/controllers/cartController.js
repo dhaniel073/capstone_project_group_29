@@ -99,32 +99,20 @@ exports.addOneToCart = catchAsync(async (req, res, next) => {
     return next(new AppError("Product ID is required", 400));
   }
 
-  const cart = await Cart.findOne({
-    user: req.user._id,
-  });
-
+  let cart = await Cart.findOne({ user: req.user._id });
   if (!cart) {
-    return next(new AppError("Cart not found", 404));
+    cart = await Cart.create({ user: req.user._id, items: [] });
   }
 
   const itemIndex = cart.items.findIndex(
-    (item) => String(item.product) === String(productId)
+    (item) => String(item.product) === String(productId),
   );
 
-  if (itemIndex === -1) {
-    return next(new AppError("This product is not in your cart", 404));
-  }
-
-  const cartItem = cart.items[itemIndex];
-
-  let message;
-
-  if (cartItem.quantity > 1) {
-    cartItem.quantity += 1;
-    message = "Item quantity decreased by one";
+  if (itemIndex > -1) {
+  
+    cart.items[itemIndex].quantity += 1;
   } else {
-    cart.items.splice(itemIndex, 1);
-    message = "Item removed from cart";
+    cart.items.push({ product: productId, quantity: 1 });
   }
 
   await cart.save();
@@ -136,9 +124,10 @@ exports.addOneToCart = catchAsync(async (req, res, next) => {
 
   return ApiResponse.success(res, {
     statusCode: 200,
-    message,
+    message: "Item quantity updated",
     data: {
       cart: updatedCart,
     },
   });
 });
+
