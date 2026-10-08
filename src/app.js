@@ -15,11 +15,11 @@ const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const checkoutRoutes = require("./routes/checkoutRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-
 const app = express();
 
 connectDB();
 
+app.set("trust proxy", 1);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
