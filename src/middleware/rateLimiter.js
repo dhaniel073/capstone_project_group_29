@@ -21,12 +21,12 @@ const globalLimiter = createLimiter(
 );
 
 const authLimiter = createLimiter(
-  20,
+  100,
   "Too many login or registration attempts. Please wait 15 minutes before trying again."
 );
 
 const passwordResetLimiter = createLimiter(
-  5,
+  15,
   "Too many password-reset requests. Please wait 15 minutes before trying again."
 );
 

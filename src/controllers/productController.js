@@ -129,25 +129,47 @@ exports.getProductById = catchAsync(async (req, res, next) => {
 exports.createProduct = catchAsync(async (req, res, next) => {
   const { name, description, sku, price, stock, category } = req.body;
 
-  let categoryExists = await Category.findOne({
-    name: new RegExp(`^${category}$`, "i"),
-  });
-
-  if (!categoryExists) {
-    categoryExists = await Category.create({
-      name: category,
-      slug: category.toLowerCase().replace(/\s+/g, "-"),
-    });
+  // Validate the category ID sent by the frontend dropdown.
+  if (
+    typeof category !== "string" ||
+    !mongoose.isObjectIdOrHexString(category)
+  ) {
+    return next(
+      new AppError("Please select a valid category", 400)
+    );
   }
 
-  const existingSku = await Product.findOne({ sku: sku.toUpperCase() });
-  if (existingSku)
-    return next(new AppError("A product with this SKU already exists", 409));
+  // Find the existing category by ID, not by name.
+  const categoryExists = await Category.findById(category);
+
+  if (!categoryExists) {
+    return next(
+      new AppError("The selected category does not exist", 404)
+    );
+  }
+
+  if (typeof sku !== "string" || !sku.trim()) {
+    return next(new AppError("SKU is required", 400));
+  }
+
+  const normalizedSku = sku.trim().toUpperCase();
+
+  const existingSku = await Product.findOne({
+    sku: normalizedSku,
+  });
+
+  if (existingSku) {
+    return next(
+      new AppError("A product with this SKU already exists", 409)
+    );
+  }
 
   let imageUrl = null;
   let imagePublicId = null;
+
   if (req.file) {
     const result = await uploadImageBuffer(req.file.buffer);
+
     imageUrl = result.secure_url;
     imagePublicId = result.public_id;
   }
@@ -155,7 +177,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
   const product = await Product.create({
     name,
     description,
-    sku,
+    sku: normalizedSku,
     price,
     stock,
     category: categoryExists._id,

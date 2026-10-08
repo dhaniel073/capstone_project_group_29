@@ -67,10 +67,29 @@ exports.initializeCheckout = catchAsync(async (req, res, next) => {
 // total before creating anything. This blocks a tampered/replayed reference
 // from ever crediting an order.
 exports.checkout = catchAsync(async (req, res, next) => {
-  const { reference } = req.body;
+  const { reference, deliveryAddress } = req.body;
+
+  console.log("Checkout body keys:", Object.keys(req.body || {}));
+  console.log("Address value:", JSON.stringify(deliveryAddress));
+  console.log("Address type:", typeof deliveryAddress);
 
   if (!reference || typeof reference !== "string") {
     return next(new AppError("A valid payment reference is required", 400));
+  }
+
+  if (
+    typeof deliveryAddress !== "string" ||
+    !deliveryAddress.trim()
+  ) {
+    return next(new AppError("A delivery address is required", 400));
+  }
+
+  const normalizedDeliveryAddress = deliveryAddress.trim();
+
+  if (normalizedDeliveryAddress.length > 1000) {
+    return next(
+      new AppError("Delivery address must not exceed 1000 characters", 400)
+    );
   }
 
   // Prevent one successful Paystack transaction from creating multiple orders.
@@ -166,16 +185,6 @@ exports.checkout = catchAsync(async (req, res, next) => {
     });
   }
 
-  /*
-    DELIVERY FEE
-
-    Your checkout page currently displays a fixed ₦500 delivery fee.
-
-    Important:
-    Keep the fee calculated on the backend. Do not receive and trust
-    `deliveryFee` directly from req.body, because a user can change it
-    in the browser before sending the checkout request.
-  */
   const deliveryFee = 500;
 
   // This is the complete amount your customer should pay.
@@ -213,27 +222,27 @@ exports.checkout = catchAsync(async (req, res, next) => {
   }
 
   const order = await Order.create({
-    user: req.user._id,
-    items: orderItems,
+  user: req.user._id,
+  items: orderItems,
 
-    // Add these fields to the Order schema, shown below.
-    subtotal,
-    deliveryFee,
+  deliveryAddress: normalizedDeliveryAddress,
 
-    // This is product subtotal + delivery fee.
-    totalAmount,
+  subtotal,
+  deliveryFee,
 
-    status: "processing",
-    paymentReference: reference,
-    paymentStatus: "paid",
-  });
+  // This is product subtotal + delivery fee.
+  totalAmount,
+
+  status: "processing",
+  paymentReference: reference,
+  paymentStatus: "paid",
+});
 
   await Payment.create({
     order: order._id,
     user: req.user._id,
     reference,
 
-    // The payment record must store the full amount actually charged.
     amount: totalAmount,
 
     status: "success",
