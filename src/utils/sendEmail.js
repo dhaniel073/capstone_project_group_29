@@ -1,31 +1,51 @@
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const { MailtrapClient } = require("mailtrap");
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  const token = process.env.MAILTRAP_API_TOKEN;
+  const fromEmail = process.env.MAILTRAP_FROM_EMAIL;
+
+  if (!token || !fromEmail) {
     throw new Error(
-      "EMAIL_USER or EMAIL_PASSWORD is missing from the backend .env file"
+      "MAILTRAP_API_TOKEN or MAILTRAP_FROM_EMAIL is missing"
     );
   }
 
-  const info = await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to,
+  if (!to || !subject || (!text && !html)) {
+    throw new Error(
+      "Email recipient, subject, and text or HTML content are required"
+    );
+  }
+
+  const client = new MailtrapClient({ token });
+
+  const recipients = (Array.isArray(to) ? to : [to]).map(
+    (recipient) =>
+      typeof recipient === "string"
+        ? { email: recipient }
+        : recipient
+  );
+
+  const payload = {
+    from: {
+      email: fromEmail,
+      name: process.env.MAILTRAP_FROM_NAME || "Capstone",
+    },
+    to: recipients,
     subject,
-    text,
-    html,
-  });
+    ...(text ? { text } : {}),
+    ...(html ? { html } : {}),
+  };
 
-  console.log("Password reset email sent:", info.messageId);
+  try {
+    const info = await client.send(payload);
 
-  return info;
+    console.log("Email accepted by Mailtrap");
+
+    return info;
+  } catch (error) {
+    console.error("Mailtrap email send failed:", error.message);
+    throw error;
+  }
 };
 
 module.exports = sendEmail;
