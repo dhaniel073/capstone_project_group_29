@@ -9,6 +9,52 @@ const { verifyTransaction } = require("../services/paystackService");
 const emailTemplate = require("../EmailTemplates/emailTemplate");
 const sendEmail = require("../utils/sendEmail");
 
+const crypto = require("crypto");
+const DELIVERY_FEE = 500;
+
+exports.initializeCheckout = catchAsync(async (req, res, next) => {
+  const cart = await Cart.findOne({ user: req.user._id }).populate({
+    path: "items.product",
+    select: "name price",
+  });
+
+  if (!cart || cart.items.length === 0) {
+    return next(new AppError("Your cart is empty", 400));
+  }
+
+  const subtotal = cart.items.reduce(
+    (sum, i) => sum + i.product.price * i.quantity,
+    0
+  );
+  const total = subtotal + DELIVERY_FEE;
+  const reference = `SMKT-${crypto.randomUUID()}`;
+
+  const response = await fetch("https://api.paystack.co/transaction/initialize", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: req.user.email,
+      amount: Math.round(total * 100), // kobo
+      currency: "NGN",
+      reference,
+      metadata: { userId: String(req.user._id), cartId: String(cart._id) },
+    }),
+  });
+  const json = await response.json();
+
+  if (!response.ok || !json.status) {
+    return next(new AppError(json.message || "Unable to start payment", 502));
+  }
+
+  return ApiResponse.success(res, {
+    statusCode: 200,
+    message: "Payment initialized",
+    data: { access_code: json.data.access_code, reference: json.data.reference },
+  });
+});
 
 // POST /api/checkout
 // Called by the webapp right after Paystack's onSuccess callback fires
@@ -21,10 +67,29 @@ const sendEmail = require("../utils/sendEmail");
 // total before creating anything. This blocks a tampered/replayed reference
 // from ever crediting an order.
 exports.checkout = catchAsync(async (req, res, next) => {
-  const { reference } = req.body;
+  const { reference, deliveryAddress } = req.body;
+
+  console.log("Checkout body keys:", Object.keys(req.body || {}));
+  console.log("Address value:", JSON.stringify(deliveryAddress));
+  console.log("Address type:", typeof deliveryAddress);
 
   if (!reference || typeof reference !== "string") {
     return next(new AppError("A valid payment reference is required", 400));
+  }
+
+  if (
+    typeof deliveryAddress !== "string" ||
+    !deliveryAddress.trim()
+  ) {
+    return next(new AppError("A delivery address is required", 400));
+  }
+
+  const normalizedDeliveryAddress = deliveryAddress.trim();
+
+  if (normalizedDeliveryAddress.length > 1000) {
+    return next(
+      new AppError("Delivery address must not exceed 1000 characters", 400)
+    );
   }
 
   // Prevent one successful Paystack transaction from creating multiple orders.
@@ -120,16 +185,6 @@ exports.checkout = catchAsync(async (req, res, next) => {
     });
   }
 
-  /*
-    DELIVERY FEE
-
-    Your checkout page currently displays a fixed ₦500 delivery fee.
-
-    Important:
-    Keep the fee calculated on the backend. Do not receive and trust
-    `deliveryFee` directly from req.body, because a user can change it
-    in the browser before sending the checkout request.
-  */
   const deliveryFee = 500;
 
   // This is the complete amount your customer should pay.
@@ -167,27 +222,27 @@ exports.checkout = catchAsync(async (req, res, next) => {
   }
 
   const order = await Order.create({
-    user: req.user._id,
-    items: orderItems,
+  user: req.user._id,
+  items: orderItems,
 
-    // Add these fields to the Order schema, shown below.
-    subtotal,
-    deliveryFee,
+  deliveryAddress: normalizedDeliveryAddress,
 
-    // This is product subtotal + delivery fee.
-    totalAmount,
+  subtotal,
+  deliveryFee,
 
-    status: "processing",
-    paymentReference: reference,
-    paymentStatus: "paid",
-  });
+  // This is product subtotal + delivery fee.
+  totalAmount,
+
+  status: "processing",
+  paymentReference: reference,
+  paymentStatus: "paid",
+});
 
   await Payment.create({
     order: order._id,
     user: req.user._id,
     reference,
 
-    // The payment record must store the full amount actually charged.
     amount: totalAmount,
 
     status: "success",

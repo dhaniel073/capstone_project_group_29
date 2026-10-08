@@ -4,6 +4,7 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
+
     sku: {
       type: String,
       required: true,
@@ -11,9 +12,16 @@ const productSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
+
     price: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },
-    category: { type: String, required: true, trim: true },
+
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+
     imageUrl: { type: String, default: null },
     imagePublicId: { type: String, default: null },
     isActive: { type: Boolean, default: true },

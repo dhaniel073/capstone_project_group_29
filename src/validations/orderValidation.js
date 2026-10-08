@@ -8,6 +8,7 @@ const addToCartSchema = z.object({
 // What the mobile app sends AFTER Paystack's onSuccess callback fires.
 const checkoutSchema = z.object({
   reference: z.string().min(1, "Payment reference is required"),
+  deliveryAddress: z.string().min(1, "Delivery Address is required"),
 });
 
 module.exports = { addToCartSchema, checkoutSchema };

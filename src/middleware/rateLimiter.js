@@ -3,7 +3,7 @@ const ApiResponse = require("../utils/apiResponse");
 
 const createLimiter = (max, message) =>
   rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 1 * 60 * 1000,
     max,
     standardHeaders: true,
     legacyHeaders: false,
@@ -21,12 +21,12 @@ const globalLimiter = createLimiter(
 );
 
 const authLimiter = createLimiter(
-  20,
+  100,
   "Too many login or registration attempts. Please wait 15 minutes before trying again."
 );
 
 const passwordResetLimiter = createLimiter(
-  5,
+  15,
   "Too many password-reset requests. Please wait 15 minutes before trying again."
 );
 

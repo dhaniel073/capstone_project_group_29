@@ -33,9 +33,9 @@ If you did not request a password reset, you can safely ignore this email.
     style="
       margin: 0;
       padding: 0;
-      background-color: #f4f6f1;
+      background-color: #f0fdf4;
       font-family: Arial, Helvetica, sans-serif;
-      color: #243019;
+      color: #14532d;
     "
   >
     <table
@@ -44,7 +44,7 @@ If you did not request a password reset, you can safely ignore this email.
       cellspacing="0"
       cellpadding="0"
       border="0"
-      style="background-color: #f4f6f1; padding: 32px 16px;"
+      style="background-color: #f0fdf4; padding: 32px 16px;"
     >
       <tr>
         <td align="center">
@@ -59,13 +59,13 @@ If you did not request a password reset, you can safely ignore this email.
               background-color: #ffffff;
               border-radius: 14px;
               overflow: hidden;
-              box-shadow: 0 8px 24px rgba(36, 48, 25, 0.1);
+              box-shadow: 0 8px 24px rgba(20, 83, 45, 0.1);
             "
           >
             <tr>
               <td
                 style="
-                  background-color: #819463;
+                  background-color: #00875a;
                   padding: 26px 32px;
                   text-align: center;
                 "
@@ -86,7 +86,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <p
                   style="
                     margin: 7px 0 0;
-                    color: #eef4e7;
+                    color: #ffffff;
                     font-size: 13px;
                     line-height: 1.4;
                   "
@@ -101,7 +101,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <h1
                   style="
                     margin: 0 0 16px;
-                    color: #243019;
+                    color: #14532d;
                     font-size: 27px;
                     line-height: 1.3;
                     font-weight: 700;
@@ -113,7 +113,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <p
                   style="
                     margin: 0 0 18px;
-                    color: #4f5b47;
+                    color: #374151;
                     font-size: 16px;
                     line-height: 1.65;
                   "
@@ -124,7 +124,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <p
                   style="
                     margin: 0 0 24px;
-                    color: #4f5b47;
+                    color: #374151;
                     font-size: 16px;
                     line-height: 1.65;
                   "
@@ -144,10 +144,10 @@ If you did not request a password reset, you can safely ignore this email.
                   <tr>
                     <td
                       align="center"
-                      bgcolor="#819463"
+                      bgcolor="#00875a"
                       style="
                         border-radius: 8px;
-                        background-color: #819463;
+                        background-color: #00875a;
                       "
                     >
                       <a
@@ -178,8 +178,8 @@ If you did not request a password reset, you can safely ignore this email.
                   border="0"
                   style="
                     margin: 0 0 24px;
-                    background-color: #f7f9f4;
-                    border: 1px solid #e0e8d8;
+                    background-color: #f0fdf4;
+                    border: 1px solid #bbf7d0;
                     border-radius: 8px;
                   "
                 >
@@ -188,7 +188,7 @@ If you did not request a password reset, you can safely ignore this email.
                       <p
                         style="
                           margin: 0 0 5px;
-                          color: #35452b;
+                          color: #166534;
                           font-size: 14px;
                           line-height: 1.5;
                           font-weight: 700;
@@ -200,7 +200,7 @@ If you did not request a password reset, you can safely ignore this email.
                       <p
                         style="
                           margin: 0;
-                          color: #5f6b57;
+                          color: #374151;
                           font-size: 14px;
                           line-height: 1.55;
                         "
@@ -216,7 +216,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <p
                   style="
                     margin: 0;
-                    color: #6f7869;
+                    color: #4b5563;
                     font-size: 13px;
                     line-height: 1.55;
                   "
@@ -228,7 +228,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <p
                   style="
                     margin: 8px 0 0;
-                    color: #62784b;
+                    color: #00875a;
                     font-size: 12px;
                     line-height: 1.55;
                     overflow-wrap: anywhere;
@@ -244,15 +244,15 @@ If you did not request a password reset, you can safely ignore this email.
               <td
                 style="
                   padding: 20px 32px;
-                  background-color: #f7f9f4;
-                  border-top: 1px solid #e7ece2;
+                  background-color: #ffffff;
+                  border-top: 1px solid #bbf7d0;
                   text-align: center;
                 "
               >
                 <p
                   style="
                     margin: 0;
-                    color: #7a8474;
+                    color: #4b5563;
                     font-size: 12px;
                     line-height: 1.5;
                   "
@@ -263,7 +263,7 @@ If you did not request a password reset, you can safely ignore this email.
                 <p
                   style="
                     margin: 5px 0 0;
-                    color: #7a8474;
+                    color: #4b5563;
                     font-size: 12px;
                     line-height: 1.5;
                   "
